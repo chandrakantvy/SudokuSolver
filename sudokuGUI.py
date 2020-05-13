@@ -45,13 +45,36 @@ def createPuzzle(sudokuFrame, puzzle, **kwargs):
                 sudokuFrame.create_text(x, y, text=num, tags='numbers', font=("Pursia", 20))
 
 
+def click(event):
+    global x, y
+    x = event.x
+    for i in range(9):
+        if i * 60 + 10 < x < i * 60 + 70:
+            x = i * 60 + 10
+            break
+    
+    y = event.y
+    for i in range(9):
+        if i * 60 + 10 < y < i * 60 + 70:
+            y = i * 60 + 10
+            break
+    
+
+
+def move(event):
+    pass
+
+
 if __name__ == '__main__':
+    x = y = 0
     win = tk.Tk()
     win.title("Sudoku")
     win.geometry('600x800')
     win.resizable(width=False, height=False)
     sudokuFrame = tk.Canvas(win, width=560, height=560)
     sudokuFrame.pack()
+    sudokuFrame.bind("<Button-1>", click)
+    sudokuFrame.bind("<Enter>", move)
     createGrid(sudokuFrame, margin=10, length=60, w=560, h=560)
 
     path = "sudoku.txt"
