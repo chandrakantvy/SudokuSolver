@@ -1,5 +1,6 @@
 import tkinter as tk
 import numpy as np
+from tkinter import messagebox as mbox
 
 def createGrid(sudokuFrame, **kwargs):
     margin = kwargs['margin']
@@ -48,6 +49,7 @@ def createPuzzle(sudokuFrame, puzzle, **kwargs):
                 sudokuFrame.create_text(x, y, text=num, tags='numbers', font=("Pursia", 20))
 
 
+
 def createCursor(x, y, length):
     sudokuFrame.delete("cursor")
     if (x, y) not in alreadyExisting:
@@ -71,6 +73,15 @@ def isValid(sudoku, value, r, c):
     return True
 
 
+def isAnyZero(sudoku):
+    m, n = sudoku.shape
+    for i in range(m):
+        for j in range(n):
+            if sudoku[i][j] == 0:
+                return True
+    return False
+
+
 def clickEvent(event):
     global x, y
     x = event.x
@@ -91,18 +102,29 @@ def clickEvent(event):
         sudokuFrame.unbind_all("<Key>")
 
 
+def isWin(puzzle):
+    for i in range(9):
+        for j in range(9):
+            if puzzle[i][j] != solution[i][j]:
+                return False
+    return True
+
+
 def keyEvent(event):
     global x, y
     xc = x // 60
     yc = y // 60
     num = event.char
     if num in '123456789':
-        color = "blue" if isValid(puzzle, int(num), xc, yc) else "red"
+        # color = "blue" if isValid(puzzle, int(num), xc, yc) else "red"
         puzzle[xc][yc] = int(num)
         sudokuFrame.delete("numbers")
         createPuzzle(sudokuFrame, puzzle, margin=10, length=60)
-        sudokuFrame.create_text(x+30, y+30, text=int(event.char), tags="numbers", font=("Pursia", 20), fill=color)
-
+        if not isAnyZero(puzzle):
+            if isWin(puzzle):
+                mbox.showinfo("you won")
+                exit()
+                
         
 if __name__ == '__main__':
     x = y = 0
