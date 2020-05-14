@@ -95,17 +95,20 @@ def keyEvent(event):
     global x, y
     xc = x // 60
     yc = y // 60
-    print(xc, yc)
-    if event.char in '123456789':
-        color = "black" if isValid(puzzle, int(event.char), xc, yc) else "red"
-        sudokuFrame.create_text(x+30, y+30, text=int(event.char), tags='numbers', font=("Pursia", 20), fill=color)
-        
+    num = event.char
+    if num in '123456789':
+        color = "blue" if isValid(puzzle, int(num), xc, yc) else "red"
+        puzzle[xc][yc] = int(num)
+        sudokuFrame.delete("numbers")
+        createPuzzle(sudokuFrame, puzzle, margin=10, length=60)
+        sudokuFrame.create_text(x+30, y+30, text=int(event.char), tags="numbers", font=("Pursia", 20), fill=color)
 
+        
 if __name__ == '__main__':
     x = y = 0
     win = tk.Tk()
     win.title("Sudoku")
-    win.geometry('600x800')
+    win.geometry('600x600')
     win.resizable(width=False, height=False)
     sudokuFrame = tk.Canvas(win, width=560, height=560)
     sudokuFrame.pack()
