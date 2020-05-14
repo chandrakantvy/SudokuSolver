@@ -25,7 +25,7 @@ def createGrid(sudokuFrame, **kwargs):
 
 
 def getPuzzleSolution(path, puzzle, solution):
-    n = random.randint(1, 1000001)
+    n = random.randint(1, 9000001)
     fp = open(path, "r")
     for i, line in enumerate(fp):
         if i == n:
@@ -79,13 +79,6 @@ def isValid(sudoku, value, r, c):
     return True
 
 
-def isAnyZero(sudoku):
-    m, n = sudoku.shape
-    for i in range(m):
-        for j in range(n):
-            if sudoku[i][j] == 0:
-
-
 def zeroPresent(puzzle):
     for i in range(9):
         for j in range(9):
@@ -137,29 +130,6 @@ def clickEvent(event):
     else:
         sudokuFrame.unbind_all("<Key>")
 
-
-def isWin(puzzle):
-    for i in range(9):
-        for j in range(9):
-            if puzzle[i][j] != solution[i][j]:
-                return False
-    return True
-
-
-def keyEvent(event):
-    global x, y
-    xc = x // 60
-    yc = y // 60
-    num = event.char
-    if num in '123456789':
-        # color = "blue" if isValid(puzzle, int(num), xc, yc) else "red"
-        puzzle[xc][yc] = int(num)
-        sudokuFrame.delete("numbers")
-        createPuzzle(sudokuFrame, puzzle, margin=10, length=60)
-        if not isAnyZero(puzzle):
-            if isWin(puzzle):
-                mbox.showinfo("you won")
-                exit()
                 
         
 if __name__ == '__main__':
