@@ -36,16 +36,42 @@ def getSolution(path, solution):
 
 
 def createPuzzle(sudokuFrame, puzzle, **kwargs):
+    margin = kwargs['margin'] 
+    length = kwargs['length']
     for i in range(9):
         for j in range(9):
-            x = kwargs['margin'] + i * kwargs['length'] + kwargs['length'] // 2
-            y = kwargs['margin'] + j * kwargs['length'] + kwargs['length'] // 2
+            x = margin + i * length + length // 2
+            y = margin + j * length + length // 2
             num = puzzle[i][j]
             if num != 0:
+                alreadyExisting.append((margin + i * length, margin + j * length))
                 sudokuFrame.create_text(x, y, text=num, tags='numbers', font=("Pursia", 20))
 
 
-def click(event):
+def createCursor(x, y, length):
+    sudokuFrame.delete("cursor")
+    if (x, y) not in alreadyExisting:
+        sudokuFrame.create_rectangle(x, y, x+length, y+length, outline='red', width=2, tags="cursor")
+
+
+def isValid(sudoku, value, r, c):
+    for i in range(9):
+        if sudoku[i][c] == value or sudoku[r][i] == value:
+            return False
+    p = (r // 3) * 3
+    q = (c // 3) * 3
+    p1 = p + 3
+    q1 = q + 3
+    while p < p1:
+        while q < q1:
+            if sudoku[p][q] == value:
+                return False
+            q += 1
+        p += 1
+    return True
+
+
+def clickEvent(event):
     global x, y
     x = event.x
     for i in range(9):
@@ -58,12 +84,22 @@ def click(event):
         if i * 60 + 10 < y < i * 60 + 70:
             y = i * 60 + 10
             break
-    
+    createCursor(x, y, length=60)
+    if (x, y) not in alreadyExisting:
+        sudokuFrame.bind_all("<Key>", keyEvent)
+    else:
+        sudokuFrame.unbind_all("<Key>")
 
 
-def move(event):
-    pass
-
+def keyEvent(event):
+    global x, y
+    xc = x // 60
+    yc = y // 60
+    print(xc, yc)
+    if event.char in '123456789':
+        color = "black" if isValid(puzzle, int(event.char), xc, yc) else "red"
+        sudokuFrame.create_text(x+30, y+30, text=int(event.char), tags='numbers', font=("Pursia", 20), fill=color)
+        
 
 if __name__ == '__main__':
     x = y = 0
@@ -73,8 +109,7 @@ if __name__ == '__main__':
     win.resizable(width=False, height=False)
     sudokuFrame = tk.Canvas(win, width=560, height=560)
     sudokuFrame.pack()
-    sudokuFrame.bind("<Button-1>", click)
-    sudokuFrame.bind("<Enter>", move)
+    sudokuFrame.bind("<Button-1>", clickEvent)
     createGrid(sudokuFrame, margin=10, length=60, w=560, h=560)
 
     path = "sudoku.txt"
@@ -83,6 +118,7 @@ if __name__ == '__main__':
     solution = np.zeros((9, 9), dtype=np.uint8)
     getSolution(path, solution)
 
+    alreadyExisting = []
     createPuzzle(sudokuFrame, puzzle, margin=10, length=60)
-    
+
     win.mainloop()
