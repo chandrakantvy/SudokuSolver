@@ -1,6 +1,8 @@
 import tkinter as tk
 import numpy as np
 from tkinter import messagebox as mbox
+import random
+
 
 def createGrid(sudokuFrame, **kwargs):
     margin = kwargs['margin']
@@ -22,31 +24,35 @@ def createGrid(sudokuFrame, **kwargs):
         sudokuFrame.create_line(x0, y0, x1, y1, fill=color)
 
 
-def getPuzzle(path, puzzle):
-    with open("sudoku.txt", "r") as sudoku_matrix:
-        line = sudoku_matrix.readline()
-        i = 0
-        while line:
-            puzzle[i] = line.split(" ")
-            i += 1
-            line = sudoku_matrix.readline()
+def getPuzzleSolution(path, puzzle, solution):
+    n = random.randint(1, 1000001)
+    fp = open(path, "r")
+    for i, line in enumerate(fp):
+        if i == n:
+            quiz, sol = line.split(',')
+
+    for i in range(9):
+        q = quiz[i*9:i*9+9]
+        s = sol[i*9:i*9+9]
+        for j in range(9):
+            puzzle[j][i] = int(q[j])
+            solution[j][i] = int(s[j])
+    fp.close()
 
 
-def getSolution(path, solution):
-    pass
 
-
-def createPuzzle(sudokuFrame, puzzle, **kwargs):
+def createPuzzle(sudokuFrame, puzzle, col_arr, **kwargs):
     margin = kwargs['margin'] 
     length = kwargs['length']
     for i in range(9):
         for j in range(9):
-            x = margin + i * length + length // 2
-            y = margin + j * length + length // 2
             num = puzzle[i][j]
             if num != 0:
-                alreadyExisting.append((margin + i * length, margin + j * length))
-                sudokuFrame.create_text(x, y, text=num, tags='numbers', font=("Pursia", 20))
+                x = margin + i * length + length // 2
+                y = margin + j * length + length // 2
+                if col_arr[i][j] == "black":
+                    alreadyExisting.append((margin + i * length, margin + j * length))      
+                sudokuFrame.create_text(x, y, text=num, tags='numbers', font=("Pursia", 20), fill=col_arr[i][j])
 
 
 
@@ -78,8 +84,38 @@ def isAnyZero(sudoku):
     for i in range(m):
         for j in range(n):
             if sudoku[i][j] == 0:
+
+
+def zeroPresent(puzzle):
+    for i in range(9):
+        for j in range(9):
+            if puzzle[i][j] == 0:
                 return True
     return False
+
+
+def isWon(puzzle):
+    for i in range(9):
+        for j in range(9):
+            if puzzle[i][j] != solution[i][j]:
+                return False
+    return True
+
+
+def keyEvent(event):
+    global x, y
+    xc = x // 60
+    yc = y // 60
+    if event.char in '123456789':
+        color = "blue" if isValid(puzzle, int(event.char), xc, yc) else "red"
+        puzzle[xc][yc] = int(event.char)
+        col_arr[xc][yc] = color
+        sudokuFrame.delete("numbers")
+        createPuzzle(sudokuFrame, puzzle, col_arr, margin=10, length=60)
+        if not zeroPresent(puzzle):
+            if isWon(puzzle):
+                mbox.showinfo("Victory", "YOU HAVE WON!!!")
+                exit()
 
 
 def clickEvent(event):
@@ -137,13 +173,13 @@ if __name__ == '__main__':
     sudokuFrame.bind("<Button-1>", clickEvent)
     createGrid(sudokuFrame, margin=10, length=60, w=560, h=560)
 
-    path = "sudoku.txt"
+    path = "sudoku.csv"
     puzzle = np.zeros((9, 9), dtype=np.uint8)
-    getPuzzle(path, puzzle)
+    col_arr = np.full((9, 9), "black")
     solution = np.zeros((9, 9), dtype=np.uint8)
-    getSolution(path, solution)
+    getPuzzleSolution(path, puzzle, solution)
 
     alreadyExisting = []
-    createPuzzle(sudokuFrame, puzzle, margin=10, length=60)
+    createPuzzle(sudokuFrame, puzzle, col_arr, margin=10, length=60)
 
     win.mainloop()
