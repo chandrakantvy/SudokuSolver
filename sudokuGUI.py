@@ -1,7 +1,9 @@
 import tkinter as tk
 import numpy as np
 from tkinter import messagebox as mbox
+from tkinter import ttk
 import random
+import pickle
 
 
 def createGrid(sudokuFrame, **kwargs):
@@ -25,7 +27,7 @@ def createGrid(sudokuFrame, **kwargs):
 
 
 def getPuzzleSolution(path, puzzle, solution):
-    n = random.randint(1, 9000001)
+    n = random.randint(1, 1000001)
     fp = open(path, "r")
     for i, line in enumerate(fp):
         if i == n:
@@ -38,7 +40,6 @@ def getPuzzleSolution(path, puzzle, solution):
             puzzle[j][i] = int(q[j])
             solution[j][i] = int(s[j])
     fp.close()
-
 
 
 def createPuzzle(sudokuFrame, puzzle, col_arr, **kwargs):
@@ -108,7 +109,10 @@ def keyEvent(event):
         if not zeroPresent(puzzle):
             if isWon(puzzle):
                 mbox.showinfo("Victory", "YOU HAVE WON!!!")
+                open("progress.pickle", "wb").close()
                 exit()
+            else:
+                mbox.showinfo("INCORRECT SOLUTION", "Something is missing!!!")
 
 
 def clickEvent(event):
@@ -129,11 +133,50 @@ def clickEvent(event):
         sudokuFrame.bind_all("<Key>", keyEvent)
     else:
         sudokuFrame.unbind_all("<Key>")
+           
 
-                
-        
+def clearGrid():
+    sudokuFrame.delete("numbers")
+    puzzle = puzzleCopy
+    alreadyExisting.clear()
+    createPuzzle(sudokuFrame, puzzle, col_arr, margin=10, length=60)
+
+
+def newGame():
+    sudokuFrame.delete("numbers")
+    getPuzzleSolution(path, puzzle, solution)
+    puzzleCopy[:] = puzzle[:]
+    alreadyExisting.clear()
+    createPuzzle(sudokuFrame, puzzle, col_arr, margin=10, length=60)
+
+
+def saveExit(progress):
+    with open(progress, "wb") as saveChange:
+        pickle.dump(puzzle, saveChange)
+        pickle.dump(solution, saveChange)
+        pickle.dump(col_arr, saveChange)
+    exit()
+
+
+def showSolution():
+    sudokuFrame.delete("numbers")
+    col_arr[:] = "black"
+    createPuzzle(sudokuFrame, solution, col_arr, margin=10, length=60)
+
+
+def visualize():
+    pass
+
+
 if __name__ == '__main__':
     x = y = 0
+    puzzle = np.zeros((9, 9), dtype=np.uint8)
+    puzzleCopy = np.zeros((9, 9), dtype=np.uint8)
+    solution = np.zeros((9, 9), dtype=np.uint8)
+    col_arr = np.full((9, 9), "black")
+    newOrsaved = True
+    path = "sudoku.csv"
+
     win = tk.Tk()
     win.title("Sudoku")
     win.geometry('600x600')
@@ -143,12 +186,47 @@ if __name__ == '__main__':
     sudokuFrame.bind("<Button-1>", clickEvent)
     createGrid(sudokuFrame, margin=10, length=60, w=560, h=560)
 
-    path = "sudoku.csv"
-    puzzle = np.zeros((9, 9), dtype=np.uint8)
-    col_arr = np.full((9, 9), "black")
-    solution = np.zeros((9, 9), dtype=np.uint8)
-    getPuzzleSolution(path, puzzle, solution)
+    buttonCanvas = tk.Canvas(win)
+    buttonCanvas.pack()
+    newGameButton = ttk.Button(buttonCanvas, text="New Game", command=newGame)
+    newGameButton.pack(side="left", padx=10)
+    
+    clearGridButton = ttk.Button(buttonCanvas, text="Restart", command=clearGrid)
+    clearGridButton.pack(side="left", padx=10)
 
+    saveExitButton = ttk.Button(buttonCanvas, text="Save & Exit", command= lambda: saveExit("progress.pickle"))
+    saveExitButton.pack(side="left", padx=10)
+
+    solutionButton = ttk.Button(buttonCanvas, text="Solution", command=showSolution)
+    solutionButton.pack(side="right", padx=10)
+
+    visualizeButton = ttk.Button(buttonCanvas, text="Visualize", command=visualize)
+    visualizeButton.pack(side="right", padx=10)
+
+    try:
+        progress = open("progress.pickle", "rb")
+    except:
+        open("progress.pickle", "wb")
+
+    progress = open("progress.pickle", "rb")
+    try:
+        puzzle = pickle.load(progress)
+        newOrsaved = mbox.askyesno("New game Or Saved Game", "Press YES for new game Or Press NO for old game")
+        if newOrsaved:
+            getPuzzleSolution(path, puzzle, solution)
+        else:
+            solution = pickle.load(progress)
+            col_arr = pickle.load(progress)
+    except:
+        getPuzzleSolution(path, puzzle, solution)
+    progress.close()
+
+    puzzleCopy[:] = puzzle[:]
+    if not newOrsaved:
+        for i in range(9):
+            for j in range(9):
+                if col_arr[i][j] != "black":
+                    puzzleCopy[i][j] = 0
     alreadyExisting = []
     createPuzzle(sudokuFrame, puzzle, col_arr, margin=10, length=60)
 
